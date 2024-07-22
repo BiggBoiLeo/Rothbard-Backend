@@ -15,6 +15,9 @@ app.post('/subscribe', async (req, res) => {
     const apiKey = process.env.API_KEY;
     const listId = process.env.LIST_ID;
 
+    console.log('API_KEY:', apiKey); // Log the API key
+    console.log('LIST_ID:', listId); // Log the List ID
+
     try {
         const response = await fetch(`https://emailoctopus.com/api/1.6/lists/${listId}/contacts`, {
             method: 'POST',
