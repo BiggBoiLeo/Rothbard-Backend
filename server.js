@@ -1,32 +1,26 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fetch = require('node-fetch'); // Use require with node-fetch version 2.x
+const fetch = require('node-fetch');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Use the cors middleware
-app.use(cors({
-    origin: '*', // Allow all origins
-    methods: ['GET', 'POST'], // Allow specific methods
-    allowedHeaders: ['Content-Type'] // Allow specific headers
-}));
-
+app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/subscribe', async (req, res) => {
     const { email } = req.body;
-
     const apiKey = process.env.API_KEY;
     const listId = process.env.LIST_ID;
 
     try {
-        const response = await fetch(`https://emailoctopus.com/api/1.6/lists/${listId}/contacts?api_key=${apiKey}`, {
+        const response = await fetch(`https://emailoctopus.com/api/1.6/lists/${listId}/contacts`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${Buffer.from(`:${apiKey}`).toString('base64')}`
             },
             body: JSON.stringify({
                 email_address: email,
