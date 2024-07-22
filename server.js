@@ -23,7 +23,7 @@ app.post('/subscribe', async (req, res) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Basic ${Buffer.from(`:${apiKey}`).toString('base64')}`
+                'Authorization': `Basic ${Buffer.from(':' + apiKey).toString('base64')}`
             },
             body: JSON.stringify({
                 email_address: email,
