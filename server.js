@@ -51,9 +51,9 @@ app.post('/subscribe', async (req, res) => {
 
 app.use(express.json());
 
-const mongoPass = process.env.DB_KEY;
+const mongoPass = process.env.DB_STRING;
 // Database connection
-mongoose.connect(`mongodb+srv://rothbardhelp:${mongoPass}@rothbardbitcoin.soybq.mongodb.net/?retryWrites=true&w=majority&appName=Rothbardbitcoin`, {
+mongoose.connect(mongoPass, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
