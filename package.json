@@ -1,10 +1,5 @@
 
 {
-  "name": "Rothbard",
-  "version": "1.0.0",
-  "engines": {
-    "node": ">=14.0.0"
-  },
   "dependencies": {
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
