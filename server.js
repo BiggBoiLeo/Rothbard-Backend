@@ -139,7 +139,7 @@ app.get('/api/verify-email', async (req, res) => {
             $unset: { verificationToken: "" }
         });
 
-        res.redirect('email-verified.html');
+        res.redirect('/email-verified.html');
     } catch (error) {
         console.error('Error during email verification:', error);
         res.status(500).send({ success: false, message: 'Server error' });
