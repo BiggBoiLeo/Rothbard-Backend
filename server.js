@@ -125,6 +125,23 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
+app.post('/api/resend-verify', async (req, res) =>{
+    try{
+        const email = req.body.email.trim();
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(400).send({ success: false, message: 'There is no account using that email.' });
+        }
+
+        sendVerificationEmail(user.email, user.verificationToken);
+        res.send({ success: true, message: 'Please check your email to verify your account.' });
+    } catch (error) {
+        console.error('Error resending email:', error);
+        res.status(500).send({ success: false, message: 'Server error' });
+    }
+});
+
 // Email Verification Endpoint
 app.get('/api/verify-email', async (req, res) => {
     try {
