@@ -134,11 +134,11 @@ app.get('/api/verify-email', async (req, res) => {
         }
 
         // Update user to verified
-        user.isVerified = true;
-        user.verificationToken = undefined;
-        await user.save();
+        await User.findByIdAndUpdate(user._id, {
+            isVerified: true,
+            $unset: { verificationToken: "" }
+        });
 
-        res.send({ success: true, message: 'Email verified successfully' });
         res.redirect('email-verified.html');
     } catch (error) {
         console.error('Error during email verification:', error);
