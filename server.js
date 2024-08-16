@@ -63,10 +63,10 @@ mongoose.connect(mongoPass, {
 
 // Define User model
 const userSchema = new mongoose.Schema({
-    email: { type: String, unique: true },
-    password: String,
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
-    verificationToken: String
+    verificationToken: { type: String, required: true }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -85,7 +85,8 @@ const transporter = nodemailer.createTransport({
 // Sign-Up Endpoint
 app.post('/api/signup', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const email = req.body.email.trim();
+        const password = req.body.password;
 
         // Check if user already exists
         let user = await User.findOne({ email });
