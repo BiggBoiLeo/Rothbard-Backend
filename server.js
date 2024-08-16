@@ -6,6 +6,9 @@ const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 require('dotenv').config();
 
 const app = express();
@@ -56,7 +59,7 @@ const mongoPass = process.env.DB_STRING;
 // Database connection
 mongoose.connect(mongoPass, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
 })
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('Could not connect to MongoDB', err));
@@ -81,6 +84,7 @@ const transporter = nodemailer.createTransport({
         pass: gmailPass
     }
 });
+
 
 // Sign-Up Endpoint
 app.post('/api/signup', async (req, res) => {
@@ -166,6 +170,86 @@ function sendVerificationEmail(email, token) {
     });
 }
 
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per windowMs
+    message: 'Too many login attempts from this IP, please try again later.'
+  });
+
+
+const SecretKey = process.env.SESSION_SECRET;
+app.use(session({
+    secret: SecretKey, // Change this to a strong secret
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: mongoPass }), // Use your MongoDB URI
+    cookie: { secure: process.env.NODE_ENV === 'production', // Set secure to true in production
+        httpOnly: true, // Helps protect against cross-site scripting (XSS) attacks
+        maxAge: 24 * 60 * 60 * 1000 // Optional: Sets cookie expiration time (e.g., 1 day) 
+        } // Use secure cookies in production
+}));
+
+// Login Endpoint
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Find the user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).send({ success: false, message: 'Invalid email or password' });
+        }
+
+        // Check the password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).send({ success: false, message: 'Invalid email or password' });
+        }
+
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(400).send({ success: false, message: 'Email not verified' });
+        }
+
+        // Create session
+        req.session.userId = user._id;
+        res.send({ success: true, message: 'Login successful' });
+    } catch (error) {
+        console.error('Error during login:', error);
+        res.status(500).send({ success: false, message: 'Server error' });
+    }
+});
+
+function isAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return next();
+    }
+    res.status(401).send({ success: false, message: 'Unauthorized' });
+}
+
+// Example of a protected route
+app.get('/api/protected', isAuthenticated, (req, res) => {
+    res.send({ success: true, message: 'User authenticated' });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send({ success: false, message: 'Failed to logout' });
+        }
+        res.send({ success: true, message: 'Logout successful' });
+    });
+});
+
+app.get('/api/user-status', (req, res) => {
+    if (req.session.userId) {
+        // User is logged in
+        res.json({ loggedIn: true });
+    } else {
+        // User is not logged in
+        res.json({ loggedIn: false });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
