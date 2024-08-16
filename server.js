@@ -72,8 +72,8 @@ const userSchema = new mongoose.Schema({
     verificationToken: { type: String}
 });
 
-const User = mongoose.model('User', userSchema);
 
+const User = mongoose.model('User', userSchema);
 
 const gmailPass = process.env.GML_PASS;
 // Email transporter setup
