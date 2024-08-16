@@ -153,7 +153,7 @@ function sendVerificationEmail(email, token) {
         to: email,
         subject: 'Email Verification',
         html: `<p>Click the link below to verify your email:</p>
-               <a href="https://rothbardbitcoin.com/api/verify-email?token=${token}">Verify Email</a>`
+               <a href="https://rothbard-backend.onrender.com/api/verify-email?token=${token}">Verify Email</a>`
     };
 
     transporter.sendMail(mailOptions, function(error, info) {
