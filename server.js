@@ -139,7 +139,7 @@ app.get('/api/verify-email', async (req, res) => {
             $unset: { verificationToken: "" }
         });
 
-        res.redirect('/email-verified.html');
+        res.redirect('https://rothbardbitcoin.com/login.html');
     } catch (error) {
         console.error('Error during email verification:', error);
         res.status(500).send({ success: false, message: 'Server error' });
@@ -152,7 +152,8 @@ function sendVerificationEmail(email, token) {
         from: 'no-reply@rothbardbitcoin.com',
         to: email,
         subject: 'Email Verification',
-        html: `<p>Click the link below to verify your email:</p>
+        html: `<h3>Thank you for signing up with Rothbard!</h3>
+               <p>Please click the link below to verify your email:</p>
                <a href="https://rothbard-backend.onrender.com/api/verify-email?token=${token}">Verify Email</a>`
     };
 
