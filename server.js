@@ -133,6 +133,9 @@ app.post('/api/resend-verify', async (req, res) =>{
         if (!user) {
             return res.status(400).send({ success: false, message: 'There is no account using that email.' });
         }
+        if (user.isVerified){
+            return res.status(400).send({ success: false, message: 'Account is already verified.' });
+        }
 
         sendVerificationEmail(user.email, user.verificationToken);
         res.send({ success: true, message: 'Please check your email to verify your account.' });
@@ -193,6 +196,7 @@ const loginLimiter = rateLimit({
     message: 'Too many login attempts from this IP, please try again later.'
   });
 
+app.use('/api/login', loginLimiter);
 
 const SecretKey = process.env.SESSION_SECRET;
 app.use(session({
