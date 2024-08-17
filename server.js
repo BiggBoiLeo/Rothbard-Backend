@@ -23,7 +23,6 @@ app.use(cors({
     credentials: true // Allow cookies to be sent
 }));
 
-app.set('trust proxy', true);
 
 app.use(bodyParser.json());
 
