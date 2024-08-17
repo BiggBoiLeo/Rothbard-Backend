@@ -213,8 +213,9 @@ app.use(session({
     store: MongoStore.create({ mongoUrl: mongoPass }), // Use your MongoDB URI
     cookie: { secure: process.env.NODE_ENV === 'production', // Set secure to true in production
         httpOnly: true, // Helps protect against cross-site scripting (XSS) attacks
-        maxAge: 24 * 60 * 60 * 1000 // Optional: Sets cookie expiration time (e.g., 1 day) 
-        } // Use secure cookies in production
+        maxAge: 24 * 60 * 60 * 1000, // Optional: Sets cookie expiration time (e.g., 1 day) 
+        sameSite: 'lax'
+    } // Use secure cookies in production
 }));
 
 // Login Endpoint
