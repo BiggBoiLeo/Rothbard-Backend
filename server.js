@@ -9,12 +9,19 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const helmet = require('helmet');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+
+app.use(helmet());
+
+app.use(cors({
+    origin: 'https://biggboileo.github.io/fronttest/', // Replace with your frontend domain
+    credentials: true // Allow cookies to be sent
+}));
 app.use(bodyParser.json());
 
 app.post('/subscribe', async (req, res) => {
@@ -204,7 +211,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({ mongoUrl: mongoPass }), // Use your MongoDB URI
-    cookie: { secure: false, // Set secure to true in production
+    cookie: { secure: process.env.NODE_ENV === 'production', // Set secure to true in production
         httpOnly: true, // Helps protect against cross-site scripting (XSS) attacks
         maxAge: 24 * 60 * 60 * 1000 // Optional: Sets cookie expiration time (e.g., 1 day) 
         } // Use secure cookies in production
@@ -234,6 +241,7 @@ app.post('/api/login', async (req, res) => {
 
         // Create session
         req.session.userId = user._id;
+        console.log("Session created:", req.session.userId);
         res.send({ success: true, message: 'Login successful' });
     } catch (error) {
         console.error('Error during login:', error);
