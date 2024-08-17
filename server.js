@@ -199,13 +199,13 @@ function sendVerificationEmail(email, token) {
     });
 }
 
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login attempts per windowMs
-    message: 'Too many login attempts from this IP, please try again later.'
-  });
+// const loginLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 5, // Limit each IP to 5 login attempts per windowMs
+//     message: 'Too many login attempts from this IP, please try again later.'
+//   });
 
-app.use('/api/login', loginLimiter);
+// app.use('/api/login', loginLimiter);
 
 const SecretKey = process.env.SESSION_SECRET;
 app.use(session({
