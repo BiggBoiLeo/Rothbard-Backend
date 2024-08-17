@@ -22,6 +22,9 @@ app.use(cors({
     origin: 'https://biggboileo.github.io', // Replace with your frontend domain
     credentials: true // Allow cookies to be sent
 }));
+
+app.set('trust proxy', true);
+
 app.use(bodyParser.json());
 
 app.post('/subscribe', async (req, res) => {
