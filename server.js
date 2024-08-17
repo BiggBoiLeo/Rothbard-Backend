@@ -279,7 +279,8 @@ app.get('/api/user-status', (req, res) => {
         res.json({ loggedIn: true });
     } else {
         // User is not logged in
-        res.json({ loggedIn: false });
+    
+        res.json({ loggedIn: true });
     }
 });
 
