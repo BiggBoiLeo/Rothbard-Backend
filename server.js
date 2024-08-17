@@ -19,7 +19,7 @@ const port = process.env.PORT || 3000;
 app.use(helmet());
 
 app.use(cors({
-    origin: 'https://biggboileo.github.io/fronttest/', // Replace with your frontend domain
+    origin: 'https://biggboileo.github.io', // Replace with your frontend domain
     credentials: true // Allow cookies to be sent
 }));
 app.use(bodyParser.json());
