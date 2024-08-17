@@ -243,6 +243,7 @@ app.post('/api/login', async (req, res) => {
         }
 
         // Create session
+        req.session.loggedIn = true;
         req.session.userId = user._id;
         console.log("Session created:", req.session.userId);
         res.send({ success: true, message: 'Login successful' });
@@ -274,13 +275,13 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/user-status', (req, res) => {
-    if (req.session.userId) {
+    if (req.session.loggedIn) {
         // User is logged in
         res.json({ loggedIn: true });
     } else {
         // User is not logged in
     
-        res.json({ loggedIn: true });
+        res.json({ loggedIn: false });
     }
 });
 
