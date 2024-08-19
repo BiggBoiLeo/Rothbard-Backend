@@ -191,7 +191,7 @@ app.post('/api/login', async (req, res) => {
             secure: process.env.NODE_ENV === 'production', 
             maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
         });
-    
+        res.send({ success: true, message: 'User logged in successfully.' });
 
     } catch (error) {
         console.error('Error during login:', error);
