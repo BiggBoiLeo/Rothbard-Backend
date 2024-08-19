@@ -246,9 +246,10 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).send({ success: false, message: 'Email not verified' });
         }
 
-        res.send({ success: true, message: user._id });
-        res.cookie('userId', user._id , { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7 });
         
+        res.cookie('userId', user._id , { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        res.status(200).json({ message: 'User authenticated successfully', userId: user._id });
+
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send({ success: false, message: 'Server error' });
