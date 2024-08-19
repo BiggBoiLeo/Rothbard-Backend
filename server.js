@@ -18,8 +18,20 @@ const port = process.env.PORT || 3000;
 
 app.use(helmet());
 
+const allowedOrigins = [
+    'https://rothbardbitcoin.com',
+    'https://test.rothbardbitcoin.com'
+];
+
 app.use(cors({
-    origin: '.rothbardbitcoin.com', // Replace with your frontend domain
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            // Allow requests with no origin (like mobile apps or Postman)
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true // Allow cookies to be sent
 }));
 
@@ -176,7 +188,7 @@ app.get('/api/verify-email', async (req, res) => {
             isVerified: true,
             $unset: { verificationToken: "" }
         });
-
+//change
         res.redirect('https://test.rothbardbitcoin.com/login.html');
     } catch (error) {
         console.error('Error during email verification:', error);
@@ -246,7 +258,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).send({ success: false, message: 'Email not verified' });
         }
 
-        res.cookie('user_id', user._id , { signed: true, httpOnly: true, sameSite: 'strict', secure: true });
+        res.cookie('user_id', user._id , { signed: true, httpOnly: true, sameSite: 'strict', secure: true, maxAge: 1000 * 60 * 60 * 24 * 7 });
         res.send({ success: true, message: user._id });
     } catch (error) {
         console.error('Error during login:', error);
