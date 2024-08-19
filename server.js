@@ -224,18 +224,6 @@ function sendVerificationEmail(email, token) {
 
 // app.use('/api/login', loginLimiter);
 
-
-// app.use(session({
-//     secret: SecretKey, // Change this to a strong secret
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: { secure: process.env.NODE_ENV === 'production', // Set secure to true in production
-//         httpOnly: true, // Helps protect against cross-site scripting (XSS) attacks
-//         maxAge: 24 * 60 * 60 * 1000, // Optional: Sets cookie expiration time (e.g., 1 day) 
-//         sameSite: 'none'
-//     } // Use secure cookies in production
-// }));
-
 // Login Endpoint
 app.post('/api/login', async (req, res) => {
     try {
@@ -258,8 +246,9 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).send({ success: false, message: 'Email not verified' });
         }
 
-        res.cookie('userId', user._id , { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7 });
         res.send({ success: true, message: user._id });
+        res.cookie('userId', user._id , { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7 });
+        
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send({ success: false, message: 'Server error' });
