@@ -258,24 +258,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).send({ success: false, message: 'Email not verified' });
         }
 
-        res.cookie('user_id', user._id , { signed: true, httpOnly: true, sameSite: 'strict', secure: true, maxAge: 1000 * 60 * 60 * 24 * 7 });
+        res.cookie('userId', user._id , { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7 });
         res.send({ success: true, message: user._id });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send({ success: false, message: 'Server error' });
     }
-});
-
-function isAuthenticated(req, res, next) {
-    if (req.session.user_Id) {
-        return next();
-    }
-    res.status(401).send({ success: false, message: 'Unauthorized' });
-}
-
-// Example of a protected route
-app.get('/api/protected', isAuthenticated, (req, res) => {
-    res.send({ success: true, message: 'User authenticated' });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -288,7 +276,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/user-status', (req, res) => {
-    if (req.session.user_id) {
+    if (req.session.userId) {
         // User is logged in
         res.json({ loggedIn: true });
     } else {
