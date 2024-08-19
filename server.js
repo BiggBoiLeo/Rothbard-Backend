@@ -67,14 +67,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Rate limiting middleware for login attempts
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login attempts per windowMs
-    message: 'Too many login attempts from this IP, please try again later.'
-});
+// // Rate limiting middleware for login attempts
+// const loginLimiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 5, // Limit each IP to 5 login attempts per windowMs
+//     message: 'Too many login attempts from this IP, please try again later.'
+// });
 
-app.use('/api/login', loginLimiter);
+// app.use('/api/login', loginLimiter);
 
 // Sign-Up Endpoint
 app.post('/api/signup', async (req, res) => {
@@ -191,7 +191,6 @@ app.post('/api/login', async (req, res) => {
             secure: process.env.NODE_ENV === 'production', 
             maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
         });
-
         res.status(200).json({ message: 'User authenticated successfully' });
 
     } catch (error) {
