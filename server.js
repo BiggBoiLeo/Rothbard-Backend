@@ -17,6 +17,8 @@ const port = process.env.PORT || 3000;
 // Apply security headers with Helmet
 app.use(helmet());
 
+app.set('trust proxy', 1);
+
 // CORS configuration
 const allowedOrigins = [
     'https://rothbardbitcoin.com',
