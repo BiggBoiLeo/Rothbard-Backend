@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const fetch = require('node-fetch');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
@@ -8,16 +7,17 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
-const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-
+// Apply security headers with Helmet
 app.use(helmet());
 
+// CORS configuration
 const allowedOrigins = [
     'https://rothbardbitcoin.com',
     'https://test.rothbardbitcoin.com'
@@ -26,7 +26,6 @@ const allowedOrigins = [
 app.use(cors({
     origin: function(origin, callback) {
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            // Allow requests with no origin (like mobile apps or Postman)
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -35,55 +34,12 @@ app.use(cors({
     credentials: true // Allow cookies to be sent
 }));
 
-
-app.use(bodyParser.json());
-
-
-const SecretKey = process.env.SESSION_SECRET;
-app.use(cookieParser(SecretKey));
-
-
-app.post('/subscribe', async (req, res) => {
-    const { email } = req.body;
-    const apiKey = process.env.API_KEY;
-    const listId = process.env.LIST_ID;
-
-    try {
-        const response = await fetch(`https://emailoctopus.com/api/1.6/lists/${listId}/contacts?api_key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email_address: email,
-                status: 'SUBSCRIBED'
-            })
-        });
-
-        const data = await response.json();
-
-        console.log('Response data:', data); // Log the response data for debugging
-
-        if (data.error) {
-            console.error('Error:', data.error.message);
-            return res.status(400).json({ error: data.error.message });
-        }
-
-        res.status(200).json({ message: 'Thank you for signing up! You will receive an email with more details soon.' });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'An error occurred. Please try again.' });
-    }
-});
-
-
-//SIGN UP HANDLER
-
+// JSON and cookie parsing middleware
 app.use(express.json());
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
-const mongoPass = process.env.DB_STRING;
-// Database connection
-mongoose.connect(mongoPass, {
+// Connect to MongoDB
+mongoose.connect(process.env.DB_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
@@ -95,22 +51,28 @@ const userSchema = new mongoose.Schema({
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
-    verificationToken: { type: String}
+    verificationToken: { type: String }
 });
-
 
 const User = mongoose.model('User', userSchema);
 
-const gmailPass = process.env.GML_PASS;
 // Email transporter setup
 const transporter = nodemailer.createTransport({
-    service: 'Gmail', // You can use different email services
+    service: 'Gmail',
     auth: {
-        user: 'rothbardhelp@gmail.com',
-        pass: gmailPass
+        user: process.env.GML_USER,
+        pass: process.env.GML_PASS
     }
 });
 
+// Rate limiting middleware for login attempts
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per windowMs
+    message: 'Too many login attempts from this IP, please try again later.'
+});
+
+app.use('/api/login', loginLimiter);
 
 // Sign-Up Endpoint
 app.post('/api/signup', async (req, res) => {
@@ -151,15 +113,16 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-app.post('/api/resend-verify', async (req, res) =>{
-    try{
+// Resend Verification Email Endpoint
+app.post('/api/resend-verify', async (req, res) => {
+    try {
         const email = req.body.email.trim();
         const user = await User.findOne({ email });
         
         if (!user) {
             return res.status(400).send({ success: false, message: 'There is no account using that email.' });
         }
-        if (user.isVerified){
+        if (user.isVerified) {
             return res.status(400).send({ success: false, message: 'Account is already verified.' });
         }
 
@@ -188,41 +151,13 @@ app.get('/api/verify-email', async (req, res) => {
             isVerified: true,
             $unset: { verificationToken: "" }
         });
-//change
+
         res.redirect('https://test.rothbardbitcoin.com/login.html');
     } catch (error) {
         console.error('Error during email verification:', error);
         res.status(500).send({ success: false, message: 'Server error' });
     }
 });
-
-// Function to send verification email
-function sendVerificationEmail(email, token) {
-    const mailOptions = {
-        from: 'no-reply@rothbardbitcoin.com',
-        to: email,
-        subject: 'Email Verification',
-        html: `<h3>Thank you for signing up with Rothbard!</h3>
-               <p>Please click the link below to verify your email:</p>
-               <a href="https://api.rothbardbitcoin.com/api/verify-email?token=${token}">Verify Email</a>`
-    };
-
-    transporter.sendMail(mailOptions, function(error, info) {
-        if (error) {
-            console.log('Error sending email:', error);
-        } else {
-            console.log('Email sent:', info.response);
-        }
-    });
-}
-
-// const loginLimiter = rateLimit({
-//     windowMs: 15 * 60 * 1000, // 15 minutes
-//     max: 5, // Limit each IP to 5 login attempts per windowMs
-//     message: 'Too many login attempts from this IP, please try again later.'
-//   });
-
-// app.use('/api/login', loginLimiter);
 
 // Login Endpoint
 app.post('/api/login', async (req, res) => {
@@ -246,9 +181,16 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).send({ success: false, message: 'Email not verified' });
         }
 
-        
-        res.cookie('userId', user._id , { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 24 * 7 });
-        res.status(200).json({ message: 'User authenticated successfully', userId: user._id });
+        // Create a JWT token and store it in a cookie
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('token', token, { 
+            httpOnly: true, 
+            sameSite: 'lax', 
+            secure: process.env.NODE_ENV === 'production', 
+            maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
+        });
+
+        res.status(200).json({ message: 'User authenticated successfully' });
 
     } catch (error) {
         console.error('Error during login:', error);
@@ -256,26 +198,86 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Logout Endpoint
 app.post('/api/logout', (req, res) => {
-    req.session.destroy(err => {
+    res.clearCookie('token');
+    res.send({ success: true, message: 'Logout successful' });
+});
+
+// User Status Endpoint
+app.get('/api/user-status', (req, res) => {
+    const token = req.cookies.token;
+    
+    if (!token) {
+        return res.json({ loggedIn: false });
+    }
+    
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(500).send({ success: false, message: 'Failed to logout' });
+            return res.json({ loggedIn: false });
         }
-        res.send({ success: true, message: 'Logout successful' });
+        
+        res.json({ loggedIn: true });
     });
 });
 
-app.get('/api/user-status', (req, res) => {
-    if (req.session.userId) {
-        // User is logged in
-        res.json({ loggedIn: true });
-    } else {
-        // User is not logged in
-    
-        res.json({ loggedIn: false });
+//gets the information from their profile to use on the website
+app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        // Use req.user to get user information
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ email: user.email, isVerified: user.isVerified });
+    } catch (error) {
+        console.error('Error retrieving user profile:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
+// Function to send verification email
+function sendVerificationEmail(email, token) {
+    const mailOptions = {
+        from: 'no-reply@rothbardbitcoin.com',
+        to: email,
+        subject: 'Email Verification',
+        html: `<h3>Thank you for signing up with Rothbard!</h3>
+               <p>Please click the link below to verify your email:</p>
+               <a href="${process.env.API_BASE_URL}/api/verify-email?token=${token}">Verify Email</a>`
+    };
+
+    transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+            console.log('Error sending email:', error);
+        } else {
+            console.log('Email sent:', info.response);
+        }
+    });
+}
+
+function authenticateToken(req, res, next) {
+    const token = req.cookies.token; // Get the token from the cookies
+    
+    if (!token) {
+        return res.status(401).json({ message: 'Access denied' });
+    }
+    
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid token' });
+        }
+        
+        // Attach user info to request object
+        req.user = user;
+        next();
+    });
+}
+
+// Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
