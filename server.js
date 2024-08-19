@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
-const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
 require('dotenv').config();
@@ -19,12 +19,17 @@ const port = process.env.PORT || 3000;
 app.use(helmet());
 
 app.use(cors({
-    origin: 'https://biggboileo.github.io', // Replace with your frontend domain
+    origin: '.rothbardbitcoin.com', // Replace with your frontend domain
     credentials: true // Allow cookies to be sent
 }));
 
 
 app.use(bodyParser.json());
+
+
+const SecretKey = process.env.SESSION_SECRET;
+app.use(cookieParser(SecretKey));
+
 
 app.post('/subscribe', async (req, res) => {
     const { email } = req.body;
@@ -172,7 +177,7 @@ app.get('/api/verify-email', async (req, res) => {
             $unset: { verificationToken: "" }
         });
 
-        res.redirect('https://rothbardbitcoin.com/login.html');
+        res.redirect('https://test.rothbardbitcoin.com/login.html');
     } catch (error) {
         console.error('Error during email verification:', error);
         res.status(500).send({ success: false, message: 'Server error' });
@@ -187,7 +192,7 @@ function sendVerificationEmail(email, token) {
         subject: 'Email Verification',
         html: `<h3>Thank you for signing up with Rothbard!</h3>
                <p>Please click the link below to verify your email:</p>
-               <a href="https://rothbard-backend.onrender.com/api/verify-email?token=${token}">Verify Email</a>`
+               <a href="https://api.rothbardbitcoin.com/api/verify-email?token=${token}">Verify Email</a>`
     };
 
     transporter.sendMail(mailOptions, function(error, info) {
@@ -207,17 +212,17 @@ function sendVerificationEmail(email, token) {
 
 // app.use('/api/login', loginLimiter);
 
-const SecretKey = process.env.SESSION_SECRET;
-app.use(session({
-    secret: SecretKey, // Change this to a strong secret
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production', // Set secure to true in production
-        httpOnly: true, // Helps protect against cross-site scripting (XSS) attacks
-        maxAge: 24 * 60 * 60 * 1000, // Optional: Sets cookie expiration time (e.g., 1 day) 
-        sameSite: 'none'
-    } // Use secure cookies in production
-}));
+
+// app.use(session({
+//     secret: SecretKey, // Change this to a strong secret
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: { secure: process.env.NODE_ENV === 'production', // Set secure to true in production
+//         httpOnly: true, // Helps protect against cross-site scripting (XSS) attacks
+//         maxAge: 24 * 60 * 60 * 1000, // Optional: Sets cookie expiration time (e.g., 1 day) 
+//         sameSite: 'none'
+//     } // Use secure cookies in production
+// }));
 
 // Login Endpoint
 app.post('/api/login', async (req, res) => {
@@ -241,11 +246,8 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).send({ success: false, message: 'Email not verified' });
         }
 
-        // Create session
-        req.session.loggedIn = true;
-        req.session.userId = user._id;
-        console.log("Session created:", req.session.userId);
-        res.send({ success: true, message: 'Login successful' });
+        res.cookie('user_id', user._id , { signed: true, httpOnly: true, sameSite: 'strict', secure: true });
+        res.send({ success: true, message: user._id });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send({ success: false, message: 'Server error' });
@@ -253,7 +255,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 function isAuthenticated(req, res, next) {
-    if (req.session.userId) {
+    if (req.session.user_Id) {
         return next();
     }
     res.status(401).send({ success: false, message: 'Unauthorized' });
@@ -274,7 +276,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/user-status', (req, res) => {
-    if (req.session.loggedIn) {
+    if (req.session.user_id) {
         // User is logged in
         res.json({ loggedIn: true });
     } else {
