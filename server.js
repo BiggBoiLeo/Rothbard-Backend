@@ -53,7 +53,10 @@ const userSchema = new mongoose.Schema({
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
-    verificationToken: { type: String }
+    verificationToken: { type: String },
+    firstName: {type: String, default: null},
+    lastName: {type: String, default: null},
+    DOB: {type: String, default: null}
 });
 
 const User = mongoose.model('User', userSchema);
@@ -205,6 +208,26 @@ app.post('/api/logout', (req, res) => {
     res.send({ success: true, message: 'Logout successful' });
 });
 
+app.post('/api/updateProfile', async (req, res) => {
+    try {
+        const first = req.body.email.trim();
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(400).send({ success: false, message: 'There is no account using that email.' });
+        }
+        if (user.isVerified) {
+            return res.status(400).send({ success: false, message: 'Account is already verified.' });
+        }
+
+        sendVerificationEmail(user.email, user.verificationToken);
+        res.send({ success: true, message: 'Please check your email to verify your account.' });
+    } catch (error) {
+        console.error('Error resending email:', error);
+        res.status(500).send({ success: false, message: 'Server error' });
+    }
+});
+
 // User Status Endpoint
 app.get('/api/user-status', (req, res) => {
     const token = req.cookies.token;
@@ -233,7 +256,7 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.json({ email: user.email, isVerified: user.isVerified });
+        res.json({ email: user.email, first:user.firstName, last:user.lastName, DOB:user.DOB, isVerified: user.isVerified });
     } catch (error) {
         console.error('Error retrieving user profile:', error);
         res.status(500).json({ message: 'Server error' });
