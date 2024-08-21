@@ -208,7 +208,7 @@ app.post('/api/logout', (req, res) => {
     res.send({ success: true, message: 'Logout successful' });
 });
 
-app.post('/api/updateProfile', async (req, res) => {
+app.post('/api/updateProfile', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         const first = req.body.enterFirst.trim();
