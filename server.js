@@ -214,7 +214,10 @@ app.post('/api/updateProfile', authenticateToken, async (req, res) => {
         const first = req.body.enterFirst.trim();
         const last = req.body.enterLast.trim();
         const DOB = req.body.enterDOB.trim();
-        const user = await User.findbyId( userId);
+
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+        const user = await User.findById( userId);
         
         console.log('Found user at', userId);
 
@@ -226,6 +229,9 @@ app.post('/api/updateProfile', authenticateToken, async (req, res) => {
         }
         if(last.length > 20){
             return res.status(400).send({ success: false, message: 'Last name you inputted was too long.' });
+        }
+        if (!dateRegex.test(DOB)) {
+            return res.status(400).send({ success: false, message: 'Invalid Date of Birth format. Use YYYY-MM-DD.' });
         }
 
         user.firstName = first;
