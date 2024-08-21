@@ -216,6 +216,8 @@ app.post('/api/updateProfile', authenticateToken, async (req, res) => {
         const DOB = req.body.enterDOB.trim();
         const user = await User.findbyId( userId);
         
+        console.log('Found user at', userId);
+
         if (!user) {
             return res.status(400).send({ success: false, message: 'Could not find that account.' });
         }
