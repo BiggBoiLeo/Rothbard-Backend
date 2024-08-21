@@ -214,10 +214,10 @@ app.post('/api/updateProfile', async (req, res) => {
         const first = req.body.enterFirst.trim();
         const last = req.body.enterLast.trim();
         const DOB = req.body.enterDOB.trim();
-        const user = await User.findOne( userId);
+        const user = await User.findbyId( userId);
         
         if (!user) {
-            return res.status(400).send({ success: false, message: 'There is no account using that email.' });
+            return res.status(400).send({ success: false, message: 'Could not find that account.' });
         }
         if(first.length > 20){
             return res.status(400).send({ success: false, message: 'First name you inputted was too long.' });
@@ -229,6 +229,8 @@ app.post('/api/updateProfile', async (req, res) => {
         user.firstName = first;
         user.lastName = last;
         user.DOB = DOB;
+
+        await user.save();
 
 
         res.send({ success: true, message: 'Successfully changed user info.' });
