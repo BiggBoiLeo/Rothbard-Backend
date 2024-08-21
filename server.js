@@ -210,20 +210,30 @@ app.post('/api/logout', (req, res) => {
 
 app.post('/api/updateProfile', async (req, res) => {
     try {
-        const first = req.body.email.trim();
-        const user = await User.findOne({ email });
+        const userId = req.user.userId;
+        const first = req.body.enterFirst.trim();
+        const last = req.body.enterLast.trim();
+        const DOB = req.body.enterDOB.trim();
+        const user = await User.findOne( userId);
         
         if (!user) {
             return res.status(400).send({ success: false, message: 'There is no account using that email.' });
         }
-        if (user.isVerified) {
-            return res.status(400).send({ success: false, message: 'Account is already verified.' });
+        if(first.length > 20){
+            return res.status(400).send({ success: false, message: 'First name you inputted was too long.' });
+        }
+        if(last.length > 20){
+            return res.status(400).send({ success: false, message: 'Last name you inputted was too long.' });
         }
 
-        sendVerificationEmail(user.email, user.verificationToken);
-        res.send({ success: true, message: 'Please check your email to verify your account.' });
+        user.firstName = first;
+        user.lastName = last;
+        user.DOB = DOB;
+
+
+        res.send({ success: true, message: 'Successfully changed user info.' });
     } catch (error) {
-        console.error('Error resending email:', error);
+        console.error('Error changing user info:', error);
         res.status(500).send({ success: false, message: 'Server error' });
     }
 });
