@@ -9,7 +9,6 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
-const { exec } = require('child_process');
 require('dotenv').config();
 
 const app = express();
@@ -282,33 +281,6 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
         console.error('Error retrieving user profile:', error);
         res.status(500).json({ message: 'Server error' });
     }
-});
-
-app.get('/get-trezor-info', (req, res) => {
-    exec('hwi enumerate', (err, stdout, stderr) => {
-        if (err) {
-            return res.json({ error: 'Failed to enumerate devices' });
-        }
-
-        const devices = JSON.parse(stdout);
-        const trezor = devices.find(device => device.type === 'trezor');
-
-        if (!trezor) {
-            return res.json({ error: 'Trezor not found' });
-        }
-
-        exec(`hwi --fingerprint getmasterxpub --device-type trezor --device-path ${trezor.path}`, (err, stdout, stderr) => {
-            if (err) {
-                return res.json({ error: 'Failed to get Trezor info' });
-            }
-
-            const info = JSON.parse(stdout);
-            res.json({
-                fingerprint: info.fingerprint,
-                xpub: info.xpub
-            });
-        });
-    });
 });
 
 // Function to send verification email
