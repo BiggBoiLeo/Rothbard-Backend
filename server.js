@@ -279,7 +279,7 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
 
         res.json({ email: user.email, first:user.firstName, last:user.lastName, DOB:user.DOB, isVerified: user.isVerified });
     } catch (error) {
-        console.error('Error retrieving user profile:', error);
+        console.log('Error retrieving user profile:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -293,8 +293,8 @@ app.post('api/getFingerprint', (req, res) => {
         
         res.json({ success: true, fingerprint: fingerprint });
     } catch (error) {
-        console.error('Invalid xpub:', error.message);
-        res.status(500).json({ message: 'Server error' });
+        console.log('Invalid xpub:', error.message);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
