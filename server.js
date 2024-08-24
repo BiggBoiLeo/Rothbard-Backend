@@ -284,17 +284,15 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('api/getFingerprint', (req, res) => {
+app.post('/api/getFingerprint', (req, res) => {
     try {
-        const xpub = req.body.xpub;
+        const { xpub } = req.body;
         const keyPair = bitcoin.bip32.fromBase58(xpub);
         const fingerprint = keyPair.fingerprint.toString('hex');
-        
-        
         res.json({ success: true, fingerprint: fingerprint });
     } catch (error) {
-        console.log('Invalid xpub:', error.message);
-        res.status(500).json({ success: false, message: 'Server error' });
+        console.error('Invalid xpub:', error.message);
+        res.status(400).json({ success: false, message: 'Invalid xpub' });
     }
 });
 
