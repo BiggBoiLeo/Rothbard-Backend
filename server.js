@@ -9,6 +9,7 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
+const bitcoin = require('bitcoinjs-lib');
 require('dotenv').config();
 
 const app = express();
@@ -280,6 +281,20 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error retrieving user profile:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('api/getFingerprint', (req, res) => {
+    try {
+        const xpub = req.body.xpub;
+        const keyPair = bitcoin.bip32.fromBase58(xpub);
+        const fingerprint = keyPair.fingerprint.toString('hex');
+        
+        
+        res.sendDate({success: true, fingerprint: fingerprint});
+    } catch (error) {
+        console.error('Invalid xpub:', error.message);
+        throw new Error('Invalid xpub');
     }
 });
 
