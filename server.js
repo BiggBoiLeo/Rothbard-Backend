@@ -294,7 +294,7 @@ app.post('api/getFingerprint', (req, res) => {
         res.sendDate({success: true, fingerprint: fingerprint});
     } catch (error) {
         console.error('Invalid xpub:', error.message);
-        throw new Error('Invalid xpub');
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
