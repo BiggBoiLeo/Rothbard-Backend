@@ -289,7 +289,7 @@ app.post('/api/getFingerprint', (req, res) => {
         const { xpub } = req.body;
         const keyPair = bitcoin.bip32.fromBase58(xpub);
         const fingerprint = keyPair.fingerprint.toString('hex');
-        res.json({ success: true, fingerprint: fingerprint });
+        res.json({ fingerprint: fingerprint });
     } catch (error) {
         console.error('Invalid xpub:', error.message);
         res.status(400).json({ success: false, message: 'Invalid xpub' });
