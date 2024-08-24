@@ -291,7 +291,7 @@ app.post('api/getFingerprint', (req, res) => {
         const fingerprint = keyPair.fingerprint.toString('hex');
         
         
-        res.sendDate({success: true, fingerprint: fingerprint});
+        res.json({ success: true, fingerprint: fingerprint });
     } catch (error) {
         console.error('Invalid xpub:', error.message);
         res.status(500).json({ message: 'Server error' });
