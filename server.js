@@ -51,8 +51,8 @@ mongoose.connect(process.env.DB_STRING, {
 
 // Define User model
 const userSchema = new mongoose.Schema({
-    emailOrUsername: {type: String, unique: true, required: true },
-    UserID: {type: String, unique: true, required: true },
+    email: {type: String, unique: true, required: true },
+    UserID: {type: String, unique: true},
     hasPaid: {type: String, required: false },
     walletDescriptor: {type: String, unique: true},
     clientkeys: {type: String, required: true },
@@ -285,15 +285,13 @@ const User = mongoose.model('clientVault', userSchema);
 
 app.post('/api/sendWallet', (req, res) => {
     try {
-        const emailoruser = req.body.emailoruser;
-        const userID = req.body.userID;
+        const email = req.body.email;
         const clientKeys = req.body.clientKeys;
         const userInfo = req.body.userInfo;
 
 
         user = new User({
-                emailOrUsername: emailoruser,
-                UserID: userID,
+                email: email,
                 clientkeys: clientKeys,
                 userInformation: userInfo
             });
