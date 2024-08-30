@@ -299,6 +299,7 @@ app.post('/api/sendWallet', async (req, res) =>  {
         user.clientkeys = clientKeys;
         user.userInformation = userInfo;
 
+        await user.save();
         console.log('Successfully make user');
         res.json({ message: 'Successfully initiated the vault create process, your vault should be ready shortly' });
     } catch (error) {
@@ -322,6 +323,8 @@ app.post('/api/initiateUser', async (req, res) => {
                 email: email,
                 firebaseID: firebaseID
             });
+
+            await user.save();
 
         console.log('Successfully make user');
 
