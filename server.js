@@ -55,7 +55,7 @@ const userSchema = new mongoose.Schema({
     UserID: {type: String, unique: true},
     hasPaid: {type: String, required: false },
     walletDescriptor: {type: String, unique: true},
-    clientkeys: {type: String, required: true },
+    clientkeys: {type: String },
     userInformation: {type: String},
     firebaseID: {type: String, unique: true, required: true}
 });
