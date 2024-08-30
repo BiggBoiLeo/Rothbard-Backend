@@ -319,7 +319,7 @@ app.post('/api/initiateUser', async (req, res) => {
             return res.json({ message: 'User already initiated.' });
         }
 
-            user = new User({
+            const user = new User({
                 email: email,
                 firebaseID: firebaseID
             });
