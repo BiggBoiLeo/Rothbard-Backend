@@ -56,7 +56,8 @@ const userSchema = new mongoose.Schema({
     hasPaid: {type: String, required: false },
     walletDescriptor: {type: String, unique: true},
     clientkeys: {type: String, required: true },
-    userInformation: {type: String}
+    userInformation: {type: String},
+    firebaseID: {type: String, unique: true, required: true}
 });
 
 const User = mongoose.model('clientVault', userSchema);
@@ -283,22 +284,49 @@ const User = mongoose.model('clientVault', userSchema);
 //     }
 // });
 
-app.post('/api/sendWallet', (req, res) => {
+app.post('/api/sendWallet', async (req, res) =>  {
     try {
-        const email = req.body.email;
+        const firebaseID = req.body.uid;
         const clientKeys = req.body.clientKeys;
         const userInfo = req.body.userInfo;
 
+        const user = await User.find({firebaseID: firebaseID});
 
-        user = new User({
-                email: email,
-                clientkeys: clientKeys,
-                userInformation: userInfo
-            });
+        if (!user) {
+             return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.clientkeys = clientKeys;
+        user.userInformation = userInfo;
+
         
         res.json({ message: 'Successfully initiated the vault create process, your vault should be ready shortly' });
     } catch (error) {
         console.error('could create it:', error.message);
+        res.status(400).json({ success: false, message: 'Could not create your vault' });
+    }
+});
+
+app.post('/api/initiateUser', async (req, res) => {
+    try {
+        const email = req.body.email;
+        const firebaseID = req.body.uid;
+        
+        const existingUser = await User.findOne({ firebaseID: firebaseID });
+
+        if (existingUser) {
+            return res.json({ message: 'User already initiated.' });
+        }
+
+            user = new User({
+                email: email,
+                firebaseID: firebaseID
+            });
+
+        
+
+        res.json({ message: 'Successfully created user' });
+    } catch (error) {
         res.status(400).json({ success: false, message: 'Could not create your vault' });
     }
 });
