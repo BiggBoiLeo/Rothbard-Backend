@@ -330,7 +330,8 @@ app.post('/api/initiateUser', async (req, res) => {
 
         res.json({ message: 'Successfully created user' });
     } catch (error) {
-        res.status(400).json({ success: false, message: 'Could not create your vault' });
+        console.log(error);
+        res.status(400).json({ success: false, message: 'had trouble initializing your account.' });
     }
 });
 
