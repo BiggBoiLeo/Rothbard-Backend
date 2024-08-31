@@ -283,6 +283,41 @@ const User = mongoose.model('clientVault', userSchema);
 //         res.status(500).json({ message: 'Server error' });
 //     }
 // });
+app.post('/api/hasDescriptor', async (req, res) =>  {
+    try {
+        const firebaseID = req.body.uid;
+
+        const user = await User.find({firebaseID: firebaseID});
+        if(!user){
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if(user.walletDescriptor){
+            return res.json({message: 'true', Descriptor: user.walletDescriptor});
+        } 
+        return res.json({message: 'false'});
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'could not check if they have a descriptor.' });
+    }
+});
+
+app.post('/api/hasKeys', async (req, res) =>  {
+    try {
+        const firebaseID = req.body.uid;
+
+        const user = await User.find({firebaseID: firebaseID});
+        if(!user){
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if(user.clientkeys){
+            return res.json({message: 'true'});
+        } 
+        return res.json({message: 'false'});
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'could not check if they have made a vault.' });
+    }
+});
 
 app.post('/api/sendWallet', async (req, res) =>  {
     try {
@@ -303,7 +338,7 @@ app.post('/api/sendWallet', async (req, res) =>  {
         console.log('Successfully make user');
         res.json({ message: 'Successfully initiated the vault create process, your vault should be ready shortly' });
     } catch (error) {
-        console.error('could create it:', error.message);
+        console.error('could not create it:', error.message);
         res.status(400).json({ success: false, message: 'Could not create your vault' });
     }
 });
