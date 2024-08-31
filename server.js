@@ -52,7 +52,7 @@ mongoose.connect(process.env.DB_STRING, {
 // Define User model
 const userSchema = new mongoose.Schema({
     email: {type: String, unique: true, required: true },
-    UserID: {type: String, unique: true},
+    UserID: {type: String},
     hasPaid: {type: String, required: false },
     walletDescriptor: {type: String, unique: true},
     clientkeys: {type: String },
