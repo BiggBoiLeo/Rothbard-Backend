@@ -130,19 +130,19 @@ app.post('/api/initiateUser', async (req, res) => {
         const firebaseID = req.body.uid;
         
         const existingUser = await User.findOne({ firebaseID: firebaseID });
-
+        
         if (existingUser) {
             return res.json({ message: 'User already initiated.' });
         }
-
+        console.log('problem making it');
             const user = new User({
                 email: email,
                 firebaseID: firebaseID
             });
+        console.log('problem saving it');
+        await user.save();
 
-            await user.save();
-
-        console.log('Successfully make user');
+        console.log('Successfully made user');
 
         return res.json({ message: 'Successfully created user' });
     } catch (error) {
