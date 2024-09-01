@@ -47,7 +47,7 @@ mongoose.connect(process.env.DB_STRING, {
 
 
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+    credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
   });
 
 // Define User model
