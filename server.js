@@ -67,7 +67,10 @@ app.post('/api/hasDescriptor', async (req, res) => {
     try {
         const idToken = req.body.idToken;
 
-        
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
+
         const decodedToken = await admin.auth().verifyIdToken(idToken, true);
         const firebaseID = decodedToken.uid;
 
@@ -99,6 +102,9 @@ app.post('/api/hasPaidandKeys', async (req, res) =>  {
     try {
         const idToken = req.body.idToken;
 
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
         
         const decodedToken = await admin.auth().verifyIdToken(idToken, true);
         const firebaseID = decodedToken.uid;
@@ -123,7 +129,10 @@ app.post('/api/sendWallet', async (req, res) =>  {
     try {
         const idToken = req.body.idToken;
 
-        
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
+
         const decodedToken = await admin.auth().verifyIdToken(idToken, true);
         const firebaseID = decodedToken.uid;
         const clientKeys = req.body.clientKeys;
@@ -152,7 +161,10 @@ app.post('/api/initiateUser', async (req, res) => {
         const email = req.body.email;
         const idToken = req.body.idToken;
 
-        
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
+
         const decodedToken = await admin.auth().verifyIdToken(idToken, true);
         const firebaseID = decodedToken.uid;
         
@@ -183,7 +195,10 @@ app.post('/api/setPayment', async (req, res) =>  {
     try {
         const idToken = req.body.idToken;
 
-        
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
+
         const decodedToken = await admin.auth().verifyIdToken(idToken, true);
         const firebaseID = decodedToken.uid;
 
