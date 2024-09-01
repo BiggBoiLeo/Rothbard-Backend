@@ -287,7 +287,7 @@ app.post('/api/hasDescriptor', async (req, res) =>  {
     try {
         const firebaseID = req.body.uid;
 
-        const user = await User.find({firebaseID: firebaseID});
+        const user = await User.findOne({firebaseID: firebaseID});
         if(!user){
             return res.status(404).json({ message: 'User not found' });
         }
@@ -305,7 +305,7 @@ app.post('/api/hasKeys', async (req, res) =>  {
     try {
         const firebaseID = req.body.uid;
 
-        const user = await User.find({firebaseID: firebaseID});
+        const user = await User.findOne({firebaseID: firebaseID});
         if(!user){
             return res.status(404).json({ message: 'User not found' });
         }
@@ -325,7 +325,7 @@ app.post('/api/sendWallet', async (req, res) =>  {
         const clientKeys = req.body.clientKeys;
         const userInfo = req.body.userInfo;
 
-        const user = await User.find({firebaseID: firebaseID});
+        const user = await User.findOne({firebaseID: firebaseID});
 
         if (!user) {
              return res.status(404).json({ message: 'User not found' });
