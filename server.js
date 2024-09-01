@@ -52,11 +52,11 @@ mongoose.connect(process.env.DB_STRING, {
 // Define User model
 const userSchema = new mongoose.Schema({
     email: {type: String, unique: true, required: true },
-    UserID: {type: String},
-    hasPaid: {type: String, required: false },
-    walletDescriptor: {type: String, unique: true},
-    clientkeys: {type: String },
-    userInformation: {type: String},
+    clientID: {type: String, default: null},
+    hasPaid: {type: String, required: false, default: false },
+    walletDescriptor: {type: String, unique: true, default: null},
+    clientKeys: {type: String, default: null },
+    userInformation: {type: String, default: null},
     firebaseID: {type: String, unique: true, required: true}
 });
 
@@ -310,7 +310,7 @@ app.post('/api/hasKeys', async (req, res) =>  {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        if(user.clientkeys){
+        if(user.clientKeys){
             return res.json({message: 'true'});
         } 
         return res.json({message: 'false'});
@@ -331,7 +331,7 @@ app.post('/api/sendWallet', async (req, res) =>  {
              return res.status(404).json({ message: 'User not found' });
         }
 
-        user.clientkeys = clientKeys;
+        user.clientKeys = clientKeys;
         user.userInformation = userInfo;
 
         await user.save();
