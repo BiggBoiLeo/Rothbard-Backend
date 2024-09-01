@@ -1,15 +1,10 @@
 const express = require('express');
-const fetch = require('node-fetch');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
-const jwt = require('jsonwebtoken');
-const bitcoin = require('bitcoinjs-lib');
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 const app = express();
@@ -49,6 +44,12 @@ mongoose.connect(process.env.DB_STRING, {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('Could not connect to MongoDB', err));
 
+
+
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+  });
+
 // Define User model
 const userSchema = new mongoose.Schema({
     email: {type: String, unique: true, required: true },
@@ -62,27 +63,45 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('clientVault', userSchema);
 
-app.post('/api/hasDescriptor', async (req, res) =>  {
+app.post('/api/hasDescriptor', async (req, res) => {
     try {
-        const firebaseID = req.body.uid;
+        const idToken = req.body.idToken;
 
-        const user = await User.findOne({firebaseID: firebaseID});
-        if(!user){
+        
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
+
+       
+        const user = await User.findOne({ firebaseID: firebaseID });
+
+        if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        if(user.walletDescriptor){
-            return res.json({message: 'true', Descriptor: user.walletDescriptor});
+        if (user.walletDescriptor) {
+            return res.json({ message: 'true', Descriptor: user.walletDescriptor });
         } 
-        return res.json({message: 'false'});
+        
+        return res.json({ message: 'false' });
     } catch (error) {
-        res.status(400).json({ success: false, message: 'could not check if they have a descriptor.' });
+        if (error.code === 'auth/id-token-revoked') {
+            return res.status(401).json({ success: false, message: 'Token has been revoked.' });
+        } else if (error.code === 'auth/argument-error') {
+            return res.status(400).json({ success: false, message: 'Invalid ID token.' });
+        } else {
+            return res.status(400).json({ success: false, message: 'Could not check if the user has a descriptor.' });
+        }
     }
 });
 
+
 app.post('/api/hasPaidandKeys', async (req, res) =>  {
     try {
-        const firebaseID = req.body.uid;
+        const idToken = req.body.idToken;
+
+        
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
         var hasKeys;
         const user = await User.findOne({firebaseID: firebaseID});
         if(!user){
@@ -102,7 +121,11 @@ app.post('/api/hasPaidandKeys', async (req, res) =>  {
 
 app.post('/api/sendWallet', async (req, res) =>  {
     try {
-        const firebaseID = req.body.uid;
+        const idToken = req.body.idToken;
+
+        
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
         const clientKeys = req.body.clientKeys;
         const userInfo = req.body.userInfo;
 
@@ -127,7 +150,11 @@ app.post('/api/sendWallet', async (req, res) =>  {
 app.post('/api/initiateUser', async (req, res) => {
     try {
         const email = req.body.email;
-        const firebaseID = req.body.uid;
+        const idToken = req.body.idToken;
+
+        
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
         
         const existingUser = await User.findOne({ firebaseID: firebaseID });
         
@@ -154,7 +181,11 @@ app.post('/api/initiateUser', async (req, res) => {
 
 app.post('/api/setPayment', async (req, res) =>  {
     try {
-        const firebaseID = req.body.uid;
+        const idToken = req.body.idToken;
+
+        
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
 
         const user = await User.findOne({firebaseID: firebaseID});
         if(!user){
