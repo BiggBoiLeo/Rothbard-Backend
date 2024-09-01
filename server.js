@@ -53,7 +53,7 @@ mongoose.connect(process.env.DB_STRING, {
 const userSchema = new mongoose.Schema({
     email: {type: String, unique: true, required: true },
     clientID: {type: String, default: null},
-    hasPaid: {type: String, required: false, default: false },
+    hasPaid: {type: boolean, required: false, default: false },
     walletDescriptor: {type: String, unique: true, default: null},
     clientKeys: {type: String, default: null },
     userInformation: {type: String, default: null},
@@ -62,227 +62,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('clientVault', userSchema);
 
-// // Email transporter setup
-// const transporter = nodemailer.createTransport({
-//     service: 'Gmail',
-//     auth: {
-//         user: process.env.GML_USER,
-//         pass: process.env.GML_PASS
-//     }
-// });
-
-// // Rate limiting middleware for login attempts
-// const loginLimiter = rateLimit({
-//     windowMs: 15 * 60 * 1000, // 15 minutes
-//     max: 5, // Limit each IP to 5 login attempts per windowMs
-//     message: 'Too many login attempts from this IP, please try again later.'
-// });
-
-// app.use('/api/login', loginLimiter);
-
-// // Sign-Up Endpoint
-// app.post('/api/signup', async (req, res) => {
-//     try {
-//         const email = req.body.email.trim();
-//         const password = req.body.password;
-
-//         // Check if user already exists
-//         let user = await User.findOne({ email });
-//         if (user) {
-//             return res.status(400).send({ success: false, message: 'Email already exists' });
-//         }
-
-//         // Hash the password
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         // Create verification token
-//         const verificationToken = crypto.randomBytes(32).toString('hex');
-
-//         // Create new user
-//         user = new User({
-//             email,
-//             password: hashedPassword,
-//             verificationToken
-//         });
-
-//         await user.save();
-
-//         // Send verification email
-//         sendVerificationEmail(user.email, user.verificationToken);
-
-//         res.send({ success: true, message: 'User registered successfully. Please check your email to verify your account.' });
-
-//     } catch (error) {
-//         console.error('Error during sign-up:', error);
-//         res.status(500).send({ success: false, message: 'Server error' });
-//     }
-// });
-
-// // Resend Verification Email Endpoint
-// app.post('/api/resend-verify', async (req, res) => {
-//     try {
-//         const email = req.body.email.trim();
-//         const user = await User.findOne({ email });
-        
-//         if (!user) {
-//             return res.status(400).send({ success: false, message: 'There is no account using that email.' });
-//         }
-//         if (user.isVerified) {
-//             return res.status(400).send({ success: false, message: 'Account is already verified.' });
-//         }
-
-//         sendVerificationEmail(user.email, user.verificationToken);
-//         res.send({ success: true, message: 'Please check your email to verify your account.' });
-//     } catch (error) {
-//         console.error('Error resending email:', error);
-//         res.status(500).send({ success: false, message: 'Server error' });
-//     }
-// });
-
-// // Email Verification Endpoint
-// app.get('/api/verify-email', async (req, res) => {
-//     try {
-//         const { token } = req.query;
-
-//         // Find user with matching verification token
-//         const user = await User.findOne({ verificationToken: token });
-
-//         if (!user) {
-//             return res.status(400).send({ success: false, message: 'Invalid token' });
-//         }
-
-//         // Update user to verified
-//         await User.findByIdAndUpdate(user._id, {
-//             isVerified: true,
-//             $unset: { verificationToken: "" }
-//         });
-
-//         res.redirect('https://test.rothbardbitcoin.com/login.html');
-//     } catch (error) {
-//         console.error('Error during email verification:', error);
-//         res.status(500).send({ success: false, message: 'Server error' });
-//     }
-// });
-
-// // Login Endpoint
-// app.post('/api/login', async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
-
-//         // Find the user
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(400).send({ success: false, message: 'Invalid email or password' });
-//         }
-
-//         // Check the password
-//         const isMatch = await bcrypt.compare(password, user.password);
-//         if (!isMatch) {
-//             return res.status(400).send({ success: false, message: 'Invalid email or password' });
-//         }
-
-//         // Check if user is verified
-//         if (!user.isVerified) {
-//             return res.status(400).send({ success: false, message: 'Email not verified' });
-//         }
-
-//         // Create a JWT token and store it in a cookie
-//         const t\oken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-//         res.cookie('token', token, { 
-//             httpOnly: true, 
-//             sameSite: 'lax', 
-//             secure: process.env.NODE_ENV === 'production', 
-//             maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week 
-//         });
-//         res.send({ success: true, message: 'User logged in successfully.' });
-
-//     } catch (error) {
-//         console.error('Error durin\g login:', error);
-//         res.status(500).send({ success: false, message: 'Server error' });
-//     }
-// });
-
-// // Logout Endpoint
-// app.post('/api/logout', (req, res) => {
-//     res.clearCookie('token');
-//     res.send({ success: true, message: 'Logout successful' });
-// });
-
-// app.post('/api/updateProfile', authenticateToken, async (req, res) => {
-//     try {
-//         const userId = req.user.userId;
-//         const first = req.body.enterFirst.trim();
-//         const last = req.body.enterLast.trim();
-//         const DOB = req.body.enterDOB.trim();
-
-//         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-//         const user = await User.findById( userId);
-        
-//         console.log('Found user at', userId);
-
-//         if (!user) {
-//             return res.status(400).send({ success: false, message: 'Could not find that account.' });
-//         }
-//         if(first.length > 20){
-//             return res.status(400).send({ success: false, message: 'First name you inputted was too long.' });
-//         }
-//         if(last.length > 20){
-//             return res.status(400).send({ success: false, message: 'Last name you inputted was too long.' });
-//         }
-//         if (!dateRegex.test(DOB)) {
-//             return res.status(400).send({ success: false, message: 'Invalid Date of Birth format. Use YYYY-MM-DD.' });
-//         }
-
-//         user.firstName = first;
-//         user.lastName = last;
-//         user.DOB = DOB;
-
-//         await user.save();
-
-
-//         res.send({ success: true, message: 'Successfully changed user info.' });
-//     } catch (error) {
-//         console.error('Error changing user info:', error);
-//         res.status(500).send({ success: false, message: 'Server error' });
-//     }
-// });
-
-// // User Status Endpoint
-// app.get('/api/user-status', (req, res) => {
-//     const token = req.cookies.token;
-    
-//     if (!token) {
-//         return res.json({ loggedIn: false });
-//     }
-    
-//     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//         if (err) {
-//             return res.json({ loggedIn: false });
-//         }
-        
-//         res.json({ loggedIn: true });
-//     });
-// });
-
-// //gets the information from their profile to use on the website
-// app.get('/api/profile', authenticateToken, async (req, res) => {
-//     try {
-//         // Use req.user to get user information
-//         const userId = req.user.userId;
-//         const user = await User.findById(userId);
-
-//         if (!user) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-
-//         res.json({ email: user.email, first:user.firstName, last:user.lastName, DOB:user.DOB, isVerified: user.isVerified });
-//     } catch (error) {
-//         console.log('Error retrieving user profile:', error);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// });
 app.post('/api/hasDescriptor', async (req, res) =>  {
     try {
         const firebaseID = req.body.uid;
@@ -301,19 +80,21 @@ app.post('/api/hasDescriptor', async (req, res) =>  {
     }
 });
 
-app.post('/api/hasKeys', async (req, res) =>  {
+app.post('/api/hasPaidandKeys', async (req, res) =>  {
     try {
         const firebaseID = req.body.uid;
-
+        var hasKeys;
         const user = await User.findOne({firebaseID: firebaseID});
         if(!user){
             return res.status(404).json({ message: 'User not found' });
         }
-
         if(user.clientKeys){
-            return res.json({message: 'true'});
-        } 
-        return res.json({message: 'false'});
+            hasKeys = true;
+        } else {
+            hasKeys = false;
+        }
+
+        return res.json({keys: hasKeys, hasPaid: user.hasPaid});
     } catch (error) {
         res.status(400).json({ success: false, message: 'could not check if they have made a vault.' });
     }
@@ -363,50 +144,31 @@ app.post('/api/initiateUser', async (req, res) => {
 
         console.log('Successfully make user');
 
-        res.json({ message: 'Successfully created user' });
+        return res.json({ message: 'Successfully created user' });
     } catch (error) {
         console.log(error);
         res.status(400).json({ success: false, message: 'had trouble initializing your account.' });
     }
 });
 
-// // Function to send verification email
-// function sendVerificationEmail(email, token) {
-//     const mailOptions = {
-//         from: 'no-reply@rothbardbitcoin.com',
-//         to: email,
-//         subject: 'Email Verification',
-//         html: `<h3>Thank you for signing up with Rothbard!</h3>
-//                <p>Please click the link below to verify your email:</p>
-//                <a href="${process.env.API_BASE_URL}/api/verify-email?token=${token}">Verify Email</a>`
-//     };
+app.post('/api/setPayment', async (req, res) =>  {
+    try {
+        const firebaseID = req.body.uid;
 
-//     transporter.sendMail(mailOptions, function(error, info) {
-//         if (error) {
-//             console.log('Error sending email:', error);
-//         } else {
-//             console.log('Email sent:', info.response);
-//         }
-//     });
-// }
+        const user = await User.findOne({firebaseID: firebaseID});
+        if(!user){
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-// function authenticateToken(req, res, next) {
-//     const token = req.cookies.token; // Get the token from the cookies
-    
-//     if (!token) {
-//         return res.status(401).json({ message: 'Access denied' });
-//     }
-    
-//     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-//         if (err) {
-//             return res.status(403).json({ message: 'Invalid token' });
-//         }
+        user.hasPaid = true;
         
-//         // Attach user info to request object
-//         req.user = user;
-//         next();
-//     });
-// }
+        await user.save();
+
+        return res.json({message: 'Payment Successful'});
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'could not check if they have made a vault.' });
+    }
+});
 
 // Start the server
 app.listen(port, () => {
