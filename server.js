@@ -45,9 +45,10 @@ mongoose.connect(process.env.DB_STRING, {
 .catch(err => console.error('Could not connect to MongoDB', err));
 
 
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 
 admin.initializeApp({
-    credential: admin.credential.cert(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+    credential: admin.credential.cert(serviceAccount),
   });
 
 // Define User model
