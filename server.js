@@ -339,7 +339,7 @@ app.post('/api/sendWallet', async (req, res) =>  {
         res.json({ message: 'Successfully initiated the vault create process, your vault should be ready shortly' });
     } catch (error) {
         console.error('could not create it:', error.message);
-        res.status(400).json({ success: false, message: 'Could not create your vault' });
+        res.status(400).json({ success: false, message: 'Could not create your vault, please try again later.' });
     }
 });
 
