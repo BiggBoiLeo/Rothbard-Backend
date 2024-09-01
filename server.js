@@ -53,8 +53,8 @@ mongoose.connect(process.env.DB_STRING, {
 const userSchema = new mongoose.Schema({
     email: {type: String, unique: true, required: true },
     clientID: {type: String, default: null},
-    hasPaid: {type: Boolean, required: false, default: false },
-    walletDescriptor: {type: String, unique: true, default: null},
+    hasPaid: {type: Boolean, required: true, default: false },
+    walletDescriptor: {type: String, default: null},
     clientKeys: {type: String, default: null },
     userInformation: {type: String, default: null},
     firebaseID: {type: String, unique: true, required: true}
@@ -134,12 +134,13 @@ app.post('/api/initiateUser', async (req, res) => {
         if (existingUser) {
             return res.json({ message: 'User already initiated.' });
         }
-        console.log('problem making it');
+        
             const user = new User({
                 email: email,
-                firebaseID: firebaseID
+                firebaseID: firebaseID,
+                hasPaid: false
             });
-        console.log('problem saving it');
+        
         await user.save();
 
         console.log('Successfully made user');
