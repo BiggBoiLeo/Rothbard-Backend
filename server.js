@@ -149,7 +149,7 @@ app.post('/api/sendWallet', async (req, res) =>  {
         user.userInformation = userInfo;
 
         await user.save();
-        console.log('Successfully make user');
+        console.log('Successfully made user');
         res.json({ message: 'Successfully initiated the vault create process, your vault should be ready shortly' });
     } catch (error) {
         console.error('could not create it:', error.message);
