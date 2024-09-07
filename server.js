@@ -233,6 +233,9 @@ app.post('/api/isPrivate', async (req, res) =>  {
         if(!user){
             return res.status(404).json({ message: 'User not found' });
         }
+        if(!user.userInformation){
+            return res.json({isPrivate: false});
+        }
 
         if(user.userInformation.slice(0, 4) === 'null'){
             return res.json({isPrivate: true});
