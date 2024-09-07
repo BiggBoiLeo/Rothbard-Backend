@@ -59,6 +59,7 @@ const userSchema = new mongoose.Schema({
     walletDescriptor: {type: String, default: null},
     clientKeys: {type: String, default: null },
     userInformation: {type: String, default: null},
+    wantsDelete: {type: Boolean, default: false},
     firebaseID: {type: String, unique: true, required: true}
 });
 
@@ -147,7 +148,6 @@ app.post('/api/sendWallet', async (req, res) =>  {
 
         user.clientKeys = clientKeys;
         user.userInformation = userInfo;
-
         await user.save();
         console.log('Successfully made user');
         res.json({ message: 'Successfully initiated the vault create process, your vault should be ready shortly' });
@@ -215,6 +215,57 @@ app.post('/api/setPayment', async (req, res) =>  {
         return res.json({message: 'Payment Successful'});
     } catch (error) {
         res.status(400).json({ success: false, message: 'could not check if they have made a vault.' });
+    }
+});
+
+app.post('/api/isPrivate', async (req, res) =>  {
+    try {
+        const idToken = req.body.idToken;
+
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
+
+        const user = await User.findOne({firebaseID: firebaseID});
+        if(!user){
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if(user.userInformation.slice(0, 4) === 'null'){
+            return res.json({isPrivate: true});
+        }
+
+        return res.json({isPrivate: false});
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'Error checking privacy mode' });
+    }
+});
+
+app.post('/api/accountDelete', async (req, res) =>  {
+    try {
+        const idToken = req.body.idToken;
+
+        if (!idToken || typeof idToken !== 'string') {
+            throw new Error('Invalid or missing ID token');
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+        const firebaseID = decodedToken.uid;
+
+        const user = await User.findOne({firebaseID: firebaseID});
+        if(!user){
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.wantsDelete = true;
+        await user.save();
+
+        return res.json({message: 'Successfully initiated the deletion process.'});
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'Error initiating the deletion process.' });
     }
 });
 
