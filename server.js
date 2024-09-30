@@ -15,9 +15,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Apply security headers and middleware
-app.use(helmet.frameguard({ action: 'DENY'}));
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
+app.use(helmet.frameguard({ action: 'DENY'}));
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+    }
+  }));
+  
 
 // CORS middleware
 app.use(corsMiddleware);
