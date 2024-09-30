@@ -15,9 +15,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Apply security headers and middleware
-app.use(helmet.frameguard({ action: 'sameorigin' }));
+app.use(helmet());
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
+
+// Custom middleware to set security headers for clickjacking protection
+app.use((req, res, next) => {
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+    next();
+});
 
 
 // CORS middleware
