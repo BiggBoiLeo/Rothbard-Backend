@@ -15,7 +15,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // Apply security headers and middleware
-app.use(helmet());
+app.use(helmet.frameguard({ action: 'sameorigin' }));
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
