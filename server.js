@@ -13,16 +13,21 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-app.use((req, res, next) => {
-    res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
-    next();
-});
 
 
 // Apply security headers and middleware
+app.use(helmet())
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
+
+// Helmet frameguard and content security policy (optional redundancy)
+app.use(helmet.frameguard({ action: 'deny' }));
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+    },
+}));
 
 
 // CORS middleware
