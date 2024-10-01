@@ -14,17 +14,19 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Apply security headers and middleware
-
-
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", 'maxcdn.bootstrapcdn.com']
-    }
-  }
-}));
+    contentSecurityPolicy: false,  // Disable CSP from Helmet because I'm setting it manually
+  }));
+  
+
+// Manually set Content-Security-Policy header
+app.use((req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'self' maxcdn.bootstrapcdn.com");
+    next();
+});
+
+
+// Apply security headers and middleware
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
