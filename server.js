@@ -16,7 +16,8 @@ const port = process.env.PORT || 3000;
 
 app.use(helmet({
     contentSecurityPolicy: false,  // Disable CSP from Helmet because I'm setting it manually
-  }));
+    frameguard: { action: 'deny' }
+}));
   
 
 // Manually set Content-Security-Policy header
