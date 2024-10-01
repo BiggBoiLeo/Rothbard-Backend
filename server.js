@@ -2,7 +2,7 @@ const express = require('express');
 const corsMiddleware = require('./middleware/corsMiddleware');
 const dbConnect = require('./config/db');
 const cookieParser = require('cookie-parser');
-const helmet = require('helmet');
+const csp = require('helmet-csp')
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const dotenv = require('dotenv');
@@ -14,21 +14,15 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-
 // Apply security headers and middleware
-app.use(helmet())
+app.use(csp({
+  directives: {
+    defaultSrc: ["'self'"],
+    styleSrc: ["'self'", 'maxcdn.bootstrapcdn.com']
+  }
+}))
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
-
-// Helmet frameguard and content security policy (optional redundancy)
-app.use(helmet.frameguard({ action: 'deny' }));
-app.use(helmet.contentSecurityPolicy({
-    directives: {
-        defaultSrc: ["'self'"],
-        frameAncestors: ["'none'"],
-    },
-}));
-
 
 // CORS middleware
 app.use(corsMiddleware);
