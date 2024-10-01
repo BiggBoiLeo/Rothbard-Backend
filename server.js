@@ -19,6 +19,13 @@ app.use(helmet());
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
+// Set custom security headers for clickjacking protection
+app.use((req, res, next) => {
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+    next();
+});
+
 // Set security headers for clickjacking protection using Helmet
 app.use(helmet.frameguard({ action: 'deny' })); // Same as setting X-Frame-Options to DENY
 app.use(helmet.contentSecurityPolicy({
