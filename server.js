@@ -22,6 +22,7 @@ app.use(helmet({
 
 // Manually set Content-Security-Policy header
 app.use((req, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
     res.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'self' maxcdn.bootstrapcdn.com");
     next();
 });
