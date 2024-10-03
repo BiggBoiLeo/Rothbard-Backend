@@ -1,8 +1,8 @@
 const express = require('express');
 const corsMiddleware = require('./middleware/corsMiddleware');
+const helmetMiddleware = require('./middleware/helmetMiddleware');
 const dbConnect = require('./config/db');
 const cookieParser = require('cookie-parser');
-const helmet = require('helmet');
 const userRoutes = require('./routes/userRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const dotenv = require('dotenv');
@@ -16,12 +16,7 @@ const port = process.env.PORT || 3000;
 
 
 // Apply security headers and middleware
-app.use(helmet());
-
-app.use(helmet.frameguard({
-    action: 'deny' // This will block all iframes from embedding your site
-  }));
-  
+app.use(helmetMiddleware);
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
