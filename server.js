@@ -14,21 +14,14 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(helmet({
-    contentSecurityPolicy: false,  // Disable CSP from Helmet because I'm setting it manually
-    frameguard: { action: 'deny' }
-}));
-  
-
-// Manually set Content-Security-Policy header
-app.use((req, res, next) => {
-    res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'self' maxcdn.bootstrapcdn.com");
-    next();
-});
-
 
 // Apply security headers and middleware
+app.use(helmet());
+
+app.use(helmet.frameguard({
+    action: 'deny' // This will block all iframes from embedding your site
+  }));
+  
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 

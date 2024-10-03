@@ -12,7 +12,7 @@
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
     "firebase-admin": "^12.4.0",
-    "helmet": "^7.2.0",
+    "helmet": "^2.3.0",
     "helmet-csp": "^4.0.0",
     "jsonwebtoken": "^9.0.2",
     "mockingoose": "^2.16.2",
