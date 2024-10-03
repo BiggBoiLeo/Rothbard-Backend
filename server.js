@@ -17,6 +17,10 @@ const port = process.env.PORT || 3000;
 
 // Apply security headers and middleware
 app.use(helmetMiddleware);
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');  // Disable caching for testing
+    next();
+  });
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
