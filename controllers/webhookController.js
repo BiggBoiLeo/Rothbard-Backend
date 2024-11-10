@@ -1,7 +1,8 @@
 const User = require("../models/userModel");
+const { handleWebhook } = require("../utils/stripe");
 
 exports.handleStripeEvent = async (req, res) => {
-  const event = req.body;
+  const event = handleWebhook(req);
   const data = event.data.object;
 
   try {
