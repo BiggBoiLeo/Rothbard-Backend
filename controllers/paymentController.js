@@ -47,11 +47,16 @@ exports.setPayment = async (req, res) => {
 exports.getCheckoutDetails = async (req, res) => {
   try {
     let { sessionId } = req.query;
+
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["line_items.data.price.product"],
     });
 
-    const customer = await stripe.customers.retrieve(session.customer);
+    let customerEmail = null;
+    if (session.mode === "subscription" && session.customer) {
+      const customer = await stripe.customers.retrieve(session.customer);
+      customerEmail = customer.email;
+    }
 
     let productName = "Unknown Product";
     if (session.line_items && session.line_items.data.length > 0) {
@@ -65,7 +70,7 @@ exports.getCheckoutDetails = async (req, res) => {
         plan: productName,
         amount: session.amount_total / 100,
         currency: session.currency,
-        customer: customer.email,
+        customer: customerEmail,
         status: session.status,
       },
     });
@@ -73,13 +78,13 @@ exports.getCheckoutDetails = async (req, res) => {
     console.error("Error getting checkout session:", err);
     return res
       .status(500)
-      .json({ success: false, message: "Failed to create checkout session" });
+      .json({ success: false, message: "Failed to get checkout session" });
   }
 };
 
 exports.createCheckout = async (req, res) => {
   try {
-    const { userEmail, priceId } = req.body;
+    const { type, userEmail, priceId } = req.body;
 
     const user = await User.findOne({ email: userEmail });
 
@@ -95,26 +100,55 @@ exports.createCheckout = async (req, res) => {
         .json({ success: false, message: "Price ID is required" });
     }
 
-    if (user.subscriptionStatus === "active")
+    let session;
+
+    if (type === "subscription") {
+      if (user.subscriptionStatus === "active") {
+        return res
+          .status(400)
+          .json({ success: false, message: "User already subscribed!" });
+      }
+
+      session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${
+          req.headers.origin || "https://api.rothbardbitcoin.com"
+        }/vault?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${
+          req.headers.origin || "https://api.rothbardbitcoin.com"
+        }/vault`,
+        subscription_data: {
+          metadata: {
+            userId: user._id.toString(),
+            userEmail: user.email,
+          },
+        },
+      });
+    } else if (type === "one-time") {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${
+          req.headers.origin || "https://api.rothbardbitcoin.com"
+        }/consultation?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${
+          req.headers.origin || "https://api.rothbardbitcoin.com"
+        }/consulation`,
+        payment_intent_data: {
+          metadata: {
+            userId: user._id.toString(),
+            userEmail: user.email,
+          },
+        },
+      });
+    } else {
       return res
         .status(400)
-        .json({ success: false, message: "User already subscribed!" });
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${
-        req.headers.origin || "http://localhost:3000"
-      }/vault?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.origin || "http://localhost:3000"}/vault`,
-      subscription_data: {
-        metadata: {
-          userId: user._id.toString(),
-          userEmail: user.email,
-        },
-      },
-    });
+        .json({ success: false, message: "Invalid payment type" });
+    }
 
     return res.status(200).json({
       success: true,

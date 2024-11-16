@@ -15,7 +15,7 @@ exports.hasDescriptor = async (req, res) => {
     const user = await User.findOne({ firebaseID: firebaseID });
 
     if (!user) {
-      return res.status(404).json({message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (user.walletDescriptor) {
@@ -49,7 +49,11 @@ exports.hasPaidAndKeys = async (req, res) => {
       hasKeys = false;
     }
 
-    return res.json({ keys: hasKeys, hasPaid: user.hasPaid });
+    return res.json({
+      keys: hasKeys,
+      hasPaid: user.hasPaid,
+      hasPaidConsultation: user.hasPaidConsultation,
+    });
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -93,15 +97,17 @@ exports.initiateUser = async (req, res) => {
   try {
     const { email, idToken } = req.body;
 
-    if (!idToken || typeof idToken !== 'string') {
-      return res.status(400).json({ success: false, message: 'Invalid or missing ID token' });
+    if (!idToken || typeof idToken !== "string") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid or missing ID token" });
     }
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const firebaseID = decodedToken.uid;
     // Check if the user already exists in the database
     const existingUser = await User.findOne({ firebaseID: firebaseID });
     if (existingUser) {
-      return res.json({ message: 'User already initiated.' });
+      return res.json({ message: "User already initiated." });
     }
 
     // Create a new user in the database
@@ -112,12 +118,12 @@ exports.initiateUser = async (req, res) => {
     });
 
     await user.save(); // Save the new user to the database
-    return res.json({ success: true, message: 'Successfully created user' });
+    return res.json({ success: true, message: "Successfully created user" });
   } catch (error) {
-    console.error('Error initializing user:', error.message);
+    console.error("Error initializing user:", error.message);
     return res.status(400).json({
       success: false,
-      message: 'Had trouble initializing your account.',
+      message: "Had trouble initializing your account.",
     });
   }
 };

@@ -22,6 +22,9 @@ exports.handleStripeEvent = async (req, res) => {
       case "customer.subscription.updated":
         await handleSubscriptionUpdated(data);
         break;
+      case "payment_intent.succeeded":
+        await handlePaymentSuccess(data);
+        break;
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
@@ -88,5 +91,17 @@ const handleSubscriptionUpdated = async (subscription) => {
     }
 
     await user.save();
+  }
+};
+
+const handlePaymentSuccess = async (payment) => {
+  if (!payment.invoice) {
+    const user = await User.findById(payment.metadata.userId);
+    if (user) {
+      if (payment.status === "succeeded") {
+        user.hasPaidConsultation = true;
+        await user.save();
+      }
+    }
   }
 };
