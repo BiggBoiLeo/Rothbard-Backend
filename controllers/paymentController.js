@@ -136,7 +136,7 @@ exports.createCheckout = async (req, res) => {
         }/consultation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${
           req.headers.origin || "https://api.rothbardbitcoin.com"
-        }/consulation`,
+        }/consultation`,
         payment_intent_data: {
           metadata: {
             userId: user._id.toString(),
